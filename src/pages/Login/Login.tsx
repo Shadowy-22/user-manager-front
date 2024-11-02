@@ -5,7 +5,7 @@ const Login = () => {
 
   return (
     <div>
-        Hola Login
+        Hola Login!
     </div>
   )
 }

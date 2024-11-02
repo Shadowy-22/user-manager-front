@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 
-const Home = () => {
+const Dashboard = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -18,4 +18,4 @@ const Home = () => {
   )
 }
 
-export default Home
+export default Dashboard
