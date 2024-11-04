@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/cuentas", "destination": "/cuentas/" },
+    { "source": "/cuentas/(.*)", "destination": "/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "redirects": [
+    { "source": "/", "destination": "/cuentas/", "permanent": true }
+  ]
+}
