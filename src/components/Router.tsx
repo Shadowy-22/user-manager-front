@@ -7,7 +7,7 @@ import UserManagement from '../pages/UserManagement/UserManagement';
 const RouterManager = () => {
   
   return (
-    <Router>
+    <Router basename='/cuentas/'>
         <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/login" element={<Login />} />
