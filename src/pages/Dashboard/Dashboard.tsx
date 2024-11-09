@@ -2,7 +2,6 @@ import React from 'react'
 import useRedirectLogin from '../../utils/useRedirectLogin'
 import { Box, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import "./Dashboard.css"
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
