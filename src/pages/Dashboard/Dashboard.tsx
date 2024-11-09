@@ -1,19 +1,12 @@
-import React, { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom';
+import React from 'react'
+import useRedirectLogin from '../../utils/useRedirectLogin'
 
 const Dashboard = () => {
-    const navigate = useNavigate();
+  useRedirectLogin();
 
-    useEffect(() => {
-        const token = localStorage.getItem("token")
-        if(!token){
-            navigate("/login")
-        } 
-    }, [navigate]);
-  
-    return (
+  return (
     <div>
-      Pagina principal
+      Hola Dashboard, esta es tu home!
     </div>
   )
 }
