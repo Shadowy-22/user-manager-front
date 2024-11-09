@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { TextField, Button, Typography, Container, Snackbar, Paper, useTheme } from '@mui/material';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import axios from 'axios';
-import useAuthRedirect from '../../utils/useRedirect';
+import { ImportMetaEnv } from '../../types/config/vite-env';
+import useRedirectHome from '../../utils/useRedirectLogin';
+import { useLocation, useNavigate } from 'react-router-dom';
+
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -10,8 +13,13 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props,
 
 const Login: React.FC = () => {
   // Verificamos si el usuario ya esta logeado
-  useAuthRedirect();
-  const theme = useTheme(); // Get the current theme
+  useRedirectHome();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const theme = useTheme(); 
+
+  // TODO: Revisar el texto en darkmode del autocomplete
 
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -28,8 +36,8 @@ const Login: React.FC = () => {
       return;
     }
 
-    if (!username.endsWith('@guggle.com')) {
-      setErrorMessage('El correo electrónico debe terminar con @guggle.com.');
+    if (!username.endsWith('@gugle.com')) {
+      setErrorMessage('El correo electrónico debe terminar con @gugle.com.');
       setOpenSnackbar(true);
       return;
     }
@@ -37,19 +45,17 @@ const Login: React.FC = () => {
     // Intentamos hacer un llamado a la API 
     // TODO: Reemplazar con la URL correspondiente
     try {
-      const loginUrl = `${import.meta.env.VITE_CUENTAS_API_URL}login`;
-      console.log(loginUrl)
+      const loginUrl = `${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}login`; 
 
       const response = await axios.post(loginUrl, { username, password });
 
-      if (response.status === 201) {
+      if (response.status === 200) {
         // Guardamos el token, id y el usuario en localStorage
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('expiresIn', response.data.expiresIn);
-        localStorage.setItem('userId', response.data.userId);
+        sessionStorage.setItem('token', response.data.token);
+        sessionStorage.setItem('userId', response.data.expiresIn);
+        sessionStorage.setItem('expiresIn', response.data.userId);
         // Redirigimos al usuario
-        console.log('Login successful:', response.data);
-        
+        navigate("/", { state: { from: location } });
       } else {
         setErrorMessage('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
         setOpenSnackbar(true);

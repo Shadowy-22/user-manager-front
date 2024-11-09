@@ -1,13 +1,12 @@
-import React from "react"
-import useAuthRedirect from "../../utils/useRedirect"
+import React from 'react'
+import useRedirectLogin from '../../utils/useRedirectLogin'
 
 const Dashboard = () => {
-    // Verificamos que el usuario esté logeado
-    useAuthRedirect();
-    
-    return (
+  useRedirectLogin();
+
+  return (
     <div>
-      Pagina principal
+      Hola Dashboard, esta es tu home!
     </div>
   )
 }
