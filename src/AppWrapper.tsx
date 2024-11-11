@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createTheme, ThemeProvider, CssBaseline, Switch, FormControlLabel, PaletteOptions, Shadows } from '@mui/material';
 import App from './App'; 
+import { DarkMode, LightMode } from '@mui/icons-material';
 
 const AppWrapper = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -58,32 +59,44 @@ const AppWrapper = () => {
         '0px 5px 15px rgba(255, 255, 255, 0.5)', 
         ...Array(20).fill('none')
       ] as Shadows,
-      components: {
-        MuiTextField: {
-            styleOverrides: {
-                root: {
-                    '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                            borderColor: '#bfc0c0', // Custom border color
-                        },
-                        '&:hover fieldset': {
-                            borderColor: '#666', // Color on hover
-                        },
-                        '&.Mui-focused fieldset': {
-                            borderColor: '#3a31d8', // Focus color
-                        },
-                    },
-                    '& label': {
-                    color: '#bfc0c0', 
-                    },
-                    '& .MuiInputBase-input': {
-                      color: '#040316', 
-                      letterSpacing: '1.5px', // Add letter spacing here
-                  },
-                },
+    components: {
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': {
+                borderColor: '#bfc0c0', // Custom border color
+              },
+              '&:hover fieldset': {
+                borderColor: '#666', // Color on hover
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: '#3a31d8', // Focus color
+              },
             },
+            '& label': {
+              color: '#bfc0c0', 
+            },
+            '& .MuiInputBase-input': {
+              color: '#040316', 
+              letterSpacing: '1.5px', 
+            },
+            // Styling autofill suggestions 
+            '& input:-webkit-autofill': {
+              '-webkit-box-shadow': '0 0 0 100px #fbfbfe inset', 
+              '-webkit-text-fill-color': '#040316', 
+            },
+          },
         },
-        // Add more customizations for other components if needed
+      },
+      MuiList: {
+        styleOverrides: {
+          root: {
+            backgroundColor: darkMode ? '#010104' : '#fbfbfe',
+            color: darkMode ? '#eae9fc' : '#040316',
+          },
+        },
+      },
     },
   });
 
@@ -97,8 +110,15 @@ const AppWrapper = () => {
       <CssBaseline />
       <div style={{ display: 'flex', justifyContent: 'right', padding: '1rem' }}>
         <FormControlLabel
-          control={<Switch checked={darkMode} onChange={handleThemeChange} />}
-          label="Dark Mode"
+          control={
+            <Switch
+              checked={darkMode}
+              onChange={handleThemeChange}
+              icon={<LightMode sx={{ color: "#040313" }} />}
+              checkedIcon={<DarkMode sx={{ color: "#eae9fc" }} />}
+            />
+          }
+          label="Tema"
         />
       </div>
       <App />
