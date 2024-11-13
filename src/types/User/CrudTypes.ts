@@ -4,7 +4,7 @@ export type User = {
     lastName: string;
     email: string;
     password: string;
-    systems: string;
+    systems: number[];
 };
   
 export type UserResponse = {
@@ -13,5 +13,6 @@ export type UserResponse = {
     apellido: string;
     nombreUsuario: string;
     contrasenia: string;
-    rol: string;
+    permisos: number[];
 };
+
