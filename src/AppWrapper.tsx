@@ -19,10 +19,9 @@ const AppWrapper = () => {
     },
     background: {
       default: '#010104',
-      paper: '#fbfbfe',
     },
     primary: {
-      main: '#3a31d8',
+      main: '#7370d1',
     },
     secondary: {
       main: '#020024',
@@ -63,31 +62,13 @@ const AppWrapper = () => {
       MuiTextField: {
         styleOverrides: {
           root: {
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: '#bfc0c0', // Custom border color
-              },
-              '&:hover fieldset': {
-                borderColor: '#666', // Color on hover
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#3a31d8', // Focus color
-              },
-            },
-            '& label': {
-              color: '#bfc0c0', 
-            },
-            '& .MuiInputBase-input': {
-              color: '#040316', 
-              letterSpacing: '1.5px', 
-            },
-            // Styling autofill suggestions 
+            // Estilado del Autofill
             '& input:-webkit-autofill': {
-              '-webkit-box-shadow': '0 0 0 100px #fbfbfe inset', 
-              '-webkit-text-fill-color': '#040316', 
+              WebkitBoxShadow: darkMode ? '0 0 0 100px #020024 inset' : null,
+              WebkitTextFillColor: darkMode ? '#eae9fc' : null,
             },
-          },
-        },
+          }
+        }
       },
       MuiList: {
         styleOverrides: {
