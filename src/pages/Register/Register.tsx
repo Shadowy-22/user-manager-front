@@ -3,7 +3,9 @@ import { TextField, Button, Typography, Container, Snackbar, Paper, useTheme } f
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import axios from 'axios';
 import { ImportMetaEnv } from '../../types/config/vite-env';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import formValidation from '../../utils/formValidation';
+import useRedirectLogin from '../../utils/useRedirectLogin';
 
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
@@ -12,12 +14,12 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props,
 
 const Register: React.FC = () => {
   // Verificamos si el usuario ya esta logeado
+  useRedirectLogin();
+
   const navigate = useNavigate();
   const location = useLocation();
   
   const theme = useTheme(); 
-
-  // TODO: Revisar el texto en darkmode del autocomplete
 
   const [fullName, setFullname] = useState<{ name: string; lastName: string }>({
     name: '',
@@ -35,15 +37,11 @@ const Register: React.FC = () => {
     setSuccessMessage(null);
     setErrorMessage(null);
     
-    // Validacion de campos
-    if (!email || !password) {
-      setErrorMessage('Por favor, llena todos los campos.');
-      setOpenSnackbar(true);
-      return;
-    }
+    // Validación antes de enviar el formulario
+    const errorMessage = formValidation(email, password, fullName);
 
-    if (!email.endsWith('@gugle.com')) {
-      setErrorMessage('El correo electrónico debe terminar con @gugle.com.');
+    if (errorMessage) {
+      setErrorMessage(errorMessage);
       setOpenSnackbar(true);
       return;
     }
@@ -52,7 +50,6 @@ const Register: React.FC = () => {
     // TODO: Reemplazar con la URL correspondiente
     try {
       const registerUrl = `${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}register`; 
-      console.log(registerUrl)
 
       const response = await axios.post(registerUrl, { 
         nombreUsuario: email, 
@@ -60,8 +57,6 @@ const Register: React.FC = () => {
         nombre: fullName.name, 
         apellido: fullName.lastName,  
       });
-
-      console.log('Response:', response);
 
       if (response.status === 200) {
         // Redirigimos al usuario
@@ -72,20 +67,14 @@ const Register: React.FC = () => {
         setTimeout(() => {
           navigate("/login", { state: { from: location } });
         }, 2000);
-        
+
       } else {
-        console.error('Unexpected status code:', response.status);
         setErrorMessage('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
         setOpenSnackbar(true);
       }
     } catch (error) {
       if (error.response) {
-        if (error.response.status === 401) {
-          setErrorMessage('Credenciales incorrectas.');
-        } else {
-          console.log(error)
-          setErrorMessage('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
-        }
+        setErrorMessage('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
       } else {
         setErrorMessage('Error de conexión. Intenta de nuevo más tarde.');
       }
@@ -127,13 +116,13 @@ const Register: React.FC = () => {
           justifyContent: 'center',
           height: '65%',
           alignItems: 'center',
-          padding: '20px',
+          padding: '35px',
           borderRadius: '8px',
           width: '100%',
           boxShadow: theme.palette.mode === 'dark' ? theme.shadows[5] : theme.shadows[2] 
         }}
       >
-        <Typography component="h1" variant="h5" style={{color: '#040316'}}>
+        <Typography component="h1" variant="h5">
           Formulario de Registro
         </Typography>
         <form onSubmit={handleRegister} noValidate style={{marginTop: '3rem'}}>
@@ -163,6 +152,7 @@ const Register: React.FC = () => {
             type="text"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
           />
           <TextField
             margin="normal"
@@ -172,12 +162,25 @@ const Register: React.FC = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
           />
           <Button size='large' type="submit" fullWidth variant="contained" color="primary" style={{marginTop: '2rem'}}>
             Registrar
           </Button>
         </form>
-        <Snackbar open={openSnackbar} autoHideDuration={3000} onClose={handleCloseSnackbar}>
+        <Typography variant="body2" sx={{ marginTop: '2rem'}}>
+          ¿Ya tienes una cuenta? {' '}
+          <Link 
+            to="/login" 
+            style={{
+              color: theme.palette.primary.main,
+              textDecoration: 'none', 
+            }}
+          >
+            Inicia Sesión
+          </Link>
+        </Typography>
+        <Snackbar open={openSnackbar} autoHideDuration={5000} onClose={handleCloseSnackbar}>
           <Alert onClose={handleCloseSnackbar} severity={successMessage ? "success" : "error"}>
             {successMessage || errorMessage}
           </Alert>

@@ -3,8 +3,9 @@ import { TextField, Button, Typography, Container, Snackbar, Paper, useTheme } f
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import axios from 'axios';
 import { ImportMetaEnv } from '../../types/config/vite-env';
-import useRedirectHome from '../../utils/useRedirectLogin';
-import { useLocation, useNavigate } from 'react-router-dom';
+import useRedirectLogin from '../../utils/useRedirectLogin';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import formValidation from '../../utils/formValidation';
 
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
@@ -13,7 +14,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props,
 
 const Login: React.FC = () => {
   // Verificamos si el usuario ya esta logeado
-  useRedirectHome();
+  useRedirectLogin();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -21,7 +22,7 @@ const Login: React.FC = () => {
 
   // TODO: Revisar el texto en darkmode del autocomplete
 
-  const [username, setUsername] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [openSnackbar, setOpenSnackbar] = useState<boolean>(false);
@@ -29,15 +30,11 @@ const Login: React.FC = () => {
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // Validacion de campos
-    if (!username || !password) {
-      setErrorMessage('Por favor, llena todos los campos.');
-      setOpenSnackbar(true);
-      return;
-    }
+    // Validación antes de enviar el formulario
+    const errorMessage = formValidation(email, password);
 
-    if (!username.endsWith('@gugle.com')) {
-      setErrorMessage('El correo electrónico debe terminar con @gugle.com.');
+    if (errorMessage) {
+      setErrorMessage(errorMessage);
       setOpenSnackbar(true);
       return;
     }
@@ -47,7 +44,7 @@ const Login: React.FC = () => {
     try {
       const loginUrl = `${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}login`; 
 
-      const response = await axios.post(loginUrl, { username, password });
+      const response = await axios.post(loginUrl, { email, password });
 
       if (response.status === 200) {
         // Guardamos el token, id y el usuario en localStorage
@@ -105,18 +102,19 @@ const Login: React.FC = () => {
           boxShadow: theme.palette.mode === 'dark' ? theme.shadows[5] : theme.shadows[2] 
         }}
       >
-        <Typography component="h1" variant="h5" style={{color: '#040316'}}>
+        <Typography component="h1" variant="h5">
           Iniciar Sesión
         </Typography>
-        <form onSubmit={handleLogin} noValidate style={{marginTop: '5rem'}}>
+        <form onSubmit={handleLogin} noValidate style={{marginTop: '3rem'}}>
           <TextField
             margin="normal"
             required
             fullWidth
             label="Correo Electrónico"
             type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
           />
           <TextField
             margin="normal"
@@ -126,11 +124,24 @@ const Login: React.FC = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
           />
           <Button size='large' type="submit" fullWidth variant="contained" color="primary" style={{marginTop: '2rem'}}>
             Iniciar Sesión
           </Button>
         </form>
+        <Typography variant="body2" style={{ marginTop: '2rem'}}>
+          ¿No tienes una cuenta? {' '}
+          <Link 
+            to="/register" 
+            style={{
+              color: theme.palette.primary.main,
+              textDecoration: 'none', 
+            }}
+          >
+            Regístrate
+          </Link>
+        </Typography>
         <Snackbar open={openSnackbar} autoHideDuration={3000} onClose={handleCloseSnackbar}>
           <Alert onClose={handleCloseSnackbar} severity="error">
             {errorMessage}
