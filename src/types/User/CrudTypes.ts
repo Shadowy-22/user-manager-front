@@ -1,18 +1,8 @@
 export type User = {
     id: number;
-    name: string;
+    firstName: string;
     lastName: string;
-    email: string;
+    username: string; // Email
     password: string;
-    systems: number[];
+    permisos: { name: string, systemId: number }[]
 };
-  
-export type UserResponse = {
-    id: number;
-    nombre: string;
-    apellido: string;
-    nombreUsuario: string;
-    contrasenia: string;
-    permisos: number[];
-};
-

@@ -52,10 +52,10 @@ const Register: React.FC = () => {
       const registerUrl = `${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}register`; 
 
       const response = await axios.post(registerUrl, { 
-        nombreUsuario: email, 
-        contrasenia: password,
-        nombre: fullName.name, 
-        apellido: fullName.lastName,  
+        username: email, 
+        password: password,
+        firstName: fullName.name, 
+        lastName: fullName.lastName,  
       });
 
       if (response.status === 200) {
@@ -74,7 +74,8 @@ const Register: React.FC = () => {
       }
     } catch (error) {
       if (error.response) {
-        setErrorMessage('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
+        console.log(error)
+        setErrorMessage('Ocurrió un error. Intenta de nuevo más tarde.');
       } else {
         setErrorMessage('Error de conexión. Intenta de nuevo más tarde.');
       }

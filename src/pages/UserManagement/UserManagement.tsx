@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -19,7 +19,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import axios from 'axios';
 import { ImportMetaEnv } from '../../types/config/vite-env';
-import { User, UserResponse } from '../../types/User/CrudTypes.ts';
+import { User } from '../../types/User/CrudTypes.ts';
 import formValidation from '../../utils/formValidation.ts';
 import { systems } from './UserData.ts';
 
@@ -28,40 +28,45 @@ const UserManagement: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<User>({
     id: 0,
-    name: '',
+    firstName: '',
     lastName: '',
-    email: '',
+    username: '',
     password: '',
-    systems: [],
+    permisos: [],
   });
   const [isEditing, setIsEditing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const axiosConfig = useMemo(() => ({
-    headers: {
-      Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-    },
-  }), []);
+  // TODO For token
+  // const axiosConfig = useMemo(() => ({
+  //   headers: {
+  //     Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+  //   },
+  // }), []);  
 
-  const initialFormData: User = { id: 0, name: '', lastName: '', email: '', password: '', systems: [] };
-
-  const mapUserData = (user: UserResponse): User => ({
-    id: user.id,
-    name: user.nombre,
-    lastName: user.apellido,
-    email: user.nombreUsuario,
-    password: user.contrasenia,
-    systems: user.permisos ?? []
-  });
+  const initialFormData: User = { id: 0, firstName: '', lastName: '', username: '', password: '', permisos: [] };
 
   const fetchUsers = useCallback(async () => {
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`, axiosConfig);
-      setRows(data.map(mapUserData));
+      const { data } = await axios.get(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`);
+      console.log('Datos obtenidos:', data);  // Verifica los datos antes de asignarlos
+     
+      // Asegurarse de que los datos estén correctamente formateados
+      const formattedData = data.map((user: User) => ({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        password: user.password,
+        permisos: Array.isArray(user.permisos) ? user.permisos : [],  // Asegura que permisos siempre sea un arreglo
+      }));
+      
+      // Establecer los datos en rows
+      setRows(formattedData);
     } catch (error) {
       console.error('Error al obtener los datos:', error);
     }
-  }, [axiosConfig]);
+  }, []);
 
   useEffect(() => {
     fetchUsers();
@@ -76,7 +81,7 @@ const UserManagement: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const validationError = formValidation(formData.email, formData.password, { name: formData.name, lastName: formData.lastName }, formData.systems);
+    const validationError = formValidation(formData.username, formData.password, { name: formData.firstName, lastName: formData.lastName }, formData.permisos.map(permission => permission.systemId));
 
     if (validationError) {
       setErrorMessage(validationError);
@@ -84,20 +89,23 @@ const UserManagement: React.FC = () => {
     }
 
     const userPayload = {
-      nombreUsuario: formData.email,
-      contrasenia: formData.password,
-      nombre: formData.name,
-      apellido: formData.lastName,
-      permisos: formData.systems,
+      firstName: formData.firstName, 
+      lastName: formData.lastName,   
+      username: formData.username,     
+      password: formData.password,  
+      sistemaIds: formData.permisos.map(permission => permission.systemId) // Usamos solo el systemId
     };
+    
 
     console.log(userPayload)
 
     try {
       if (isEditing) {
-        await axios.put(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${formData.id}`, userPayload, axiosConfig);
+        await axios.put(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${formData.id}`, userPayload);
       } else {
-        await axios.post(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}register`, userPayload, axiosConfig);
+        const response = await axios.post(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`, userPayload);
+        console.log(response.data)
+        console.log(response.status)
       }
       handleClose();
       fetchUsers();
@@ -105,6 +113,7 @@ const UserManagement: React.FC = () => {
       if (error.response?.status === 409) {
         setErrorMessage('El correo electrónico ya está registrado.');
       } else {
+        console.error(error)
         setErrorMessage('Ocurrió un error al guardar los datos.');
       }
     }
@@ -121,7 +130,7 @@ const UserManagement: React.FC = () => {
 
   const handleDeleteClick = async (id: GridRowId) => {
     try {
-      await axios.delete(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${id}`, axiosConfig);
+      await axios.delete(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${id}`);
       setRows(rows.filter((row) => row.id !== id));
     } catch (error) {
       console.error('Error al eliminar el usuario:', error);
@@ -135,11 +144,26 @@ const UserManagement: React.FC = () => {
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', flex: 0.5 },
-    { field: 'name', headerName: 'Nombre', flex: 1, editable: true },
-    { field: 'lastName', headerName: 'Apellido', flex: 1, editable: true },
-    { field: 'email', headerName: 'Email', flex: 1.5, editable: true },
-    { field: 'password', headerName: 'Contraseña', flex: 1.5, editable: true },
-    { field: 'systems', headerName: 'Sistemas con Acceso', flex: 1.5, editable: true },
+    { field: 'firstName', headerName: 'Nombre', flex: 1 },
+    { field: 'lastName', headerName: 'Apellido', flex: 1 },
+    { field: 'username', headerName: 'Email', flex: 1.5 },
+    { field: 'password', headerName: 'Contraseña', flex: 1.5 },
+    {
+      field: 'permisos',
+      headerName: 'Sistemas con Acceso',
+      flex: 1.5,
+      editable: false,
+      valueGetter: (params: { row: User }) => {
+        // Verificar si params.row existe
+        if (!params.row || !Array.isArray(params.row.permisos)) {
+          console.warn('Fila de datos está indefinida o permisos no está disponible:', params);
+          return 'Sin permisos';
+        }
+      
+        const permisos = params.row.permisos;
+        return permisos.map((permission) => permission.name).join(', ') || 'Sin permisos';
+      }
+    },
     {
       field: 'actions',
       type: 'actions',
@@ -163,7 +187,7 @@ const UserManagement: React.FC = () => {
 
       <Box sx={{ height: 500, width: '100%', mt: 2 }}>
         <DataGrid
-          rows={rows}
+          rows={rows && rows.length > 0 ? rows : []} 
           columns={columns}
           editMode="row"
           processRowUpdate={processRowUpdate}
@@ -178,8 +202,8 @@ const UserManagement: React.FC = () => {
               label="Nombre"
               fullWidth
               margin="dense"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.firstName}
+              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
             />
             <TextField
               label="Apellido"
@@ -192,8 +216,8 @@ const UserManagement: React.FC = () => {
               label="Email"
               fullWidth
               margin="dense"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               autoComplete="username"
             />
             <TextField
@@ -210,12 +234,12 @@ const UserManagement: React.FC = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={formData.systems.includes(Number(key))}
+                      checked={formData.permisos.some(permission => permission.systemId === Number(key))}
                       onChange={(e) => {
-                        const newSystems = e.target.checked
-                          ? [...formData.systems, Number(key)]
-                          : formData.systems.filter((s) => s !== Number(key));
-                        setFormData({ ...formData, systems: newSystems });
+                        const newPermissions = e.target.checked
+                          ? [...formData.permisos, { name: systems[Number(key)], systemId: Number(key) }]
+                          : formData.permisos.filter((permission) => permission.systemId !== Number(key));
+                        setFormData({ ...formData, permisos: newPermissions });
                       }}
                     />
                   }
