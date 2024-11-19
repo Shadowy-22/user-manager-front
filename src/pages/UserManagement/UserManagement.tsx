@@ -36,6 +36,8 @@ const UserManagement: React.FC = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showPasswordField, setShowPasswordField] = useState(false);
+
 
   // TODO For token
   // const axiosConfig = useMemo(() => ({
@@ -56,7 +58,6 @@ const UserManagement: React.FC = () => {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        password: user.password,
         permisos: Array.isArray(user.permisos) ? user.permisos : [],  // Asegura que permisos siempre sea un arreglo
       }));
       
@@ -79,19 +80,28 @@ const UserManagement: React.FC = () => {
     setErrorMessage(null);
   };
 
-  const handleSave = async () => {
-    const validationError = formValidation(formData.username, formData.password, { name: formData.firstName, lastName: formData.lastName }, formData.permisos.map(permission => permission.systemId));
+    const handleSave = async () => {
+      // Determinamos si es necesario validar la contraseña
+      const validatePassword = !(isEditing && !showPasswordField);
 
-    if (validationError) {
-      setErrorMessage(validationError);
-      return;
-    }
+      const validationError = formValidation(
+        formData.username,
+        formData.password, // Se puede pasar null si es opcional
+        { name: formData.firstName, lastName: formData.lastName },
+        formData.permisos.map((permission) => permission.systemId),
+        validatePassword // Validamos solo si es necesario
+      );
+
+      if (validationError) {
+        setErrorMessage(validationError);
+        return;
+      }
 
     const userPayload = {
       firstName: formData.firstName, 
       lastName: formData.lastName,   
       username: formData.username,     
-      password: formData.password,  
+      password: formData.password || null,  
       sistemaIds: formData.permisos.map(permission => permission.systemId) // Usamos solo el systemId
     };
 
@@ -140,7 +150,6 @@ const UserManagement: React.FC = () => {
     { field: 'firstName', headerName: 'Nombre', flex: 1 },
     { field: 'lastName', headerName: 'Apellido', flex: 1 },
     { field: 'username', headerName: 'Email', flex: 1.5 },
-    { field: 'password', headerName: 'Contraseña', flex: 1.5 },
     {
       field: 'permisos',
       headerName: 'Sistemas con Acceso',
@@ -220,15 +229,51 @@ const UserManagement: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               autoComplete="username"
             />
-            <TextField
-              label="Contraseña"
-              fullWidth
-              type="password"
-              margin="dense"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              autoComplete={isEditing ? "current-password" : "new-password"}
-            />
+            
+            {/* Lógica para el campo de contraseña */}
+            
+            {isEditing ? (
+              <>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={showPasswordField}
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        setShowPasswordField(isChecked);
+                        if (!isChecked) {
+                          // Limpiar la contraseña del formData si el campo se oculta
+                          setFormData((prevData) => ({ ...prevData, password: "" }));
+                        }
+                      }}
+                    />
+                  }
+                  label="Cambiar Contraseña"
+                />
+                {showPasswordField && (
+                  <TextField
+                    label="Contraseña"
+                    fullWidth
+                    type="password"
+                    margin="dense"
+                    value={formData.password || ""}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value})}
+                    autoComplete="current-password"
+                  />
+                )}
+              </>
+            ) : (
+              <TextField
+                label="Contraseña"
+                fullWidth
+                type="password"
+                margin="dense"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                autoComplete="new-password"
+              />
+            )}
+
             <FormGroup row sx={{ gap: 2, marginTop: 3 }}>
               {systemKeys.map((key) => (
                 <FormControlLabel
