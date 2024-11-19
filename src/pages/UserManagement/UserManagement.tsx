@@ -49,7 +49,6 @@ const UserManagement: React.FC = () => {
   const fetchUsers = useCallback(async () => {
     try {
       const { data } = await axios.get(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`);
-      console.log('Datos obtenidos:', data);  // Verifica los datos antes de asignarlos
      
       // Asegurarse de que los datos estén correctamente formateados
       const formattedData = data.map((user: User) => ({
@@ -64,7 +63,7 @@ const UserManagement: React.FC = () => {
       // Establecer los datos en rows
       setRows(formattedData);
     } catch (error) {
-      console.error('Error al obtener los datos:', error);
+      console.error('Error al obtener los datos', error);
     }
   }, []);
 
@@ -95,17 +94,12 @@ const UserManagement: React.FC = () => {
       password: formData.password,  
       sistemaIds: formData.permisos.map(permission => permission.systemId) // Usamos solo el systemId
     };
-    
-
-    console.log(userPayload)
 
     try {
       if (isEditing) {
         await axios.put(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${formData.id}`, userPayload);
       } else {
-        const response = await axios.post(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`, userPayload);
-        console.log(response.data)
-        console.log(response.status)
+        await axios.post(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`, userPayload);
       }
       handleClose();
       fetchUsers();
@@ -113,7 +107,6 @@ const UserManagement: React.FC = () => {
       if (error.response?.status === 409) {
         setErrorMessage('El correo electrónico ya está registrado.');
       } else {
-        console.error(error)
         setErrorMessage('Ocurrió un error al guardar los datos.');
       }
     }
@@ -153,15 +146,22 @@ const UserManagement: React.FC = () => {
       headerName: 'Sistemas con Acceso',
       flex: 1.5,
       editable: false,
-      valueGetter: (params: { row: User }) => {
-        // Verificar si params.row existe
+      sortable: false,
+      renderCell: (params) => {
         if (!params.row || !Array.isArray(params.row.permisos)) {
-          console.warn('Fila de datos está indefinida o permisos no está disponible:', params);
           return 'Sin permisos';
         }
-      
         const permisos = params.row.permisos;
-        return permisos.map((permission) => permission.name).join(', ') || 'Sin permisos';
+        return (
+          <Box>
+            {permisos.map((permission, index) => (
+              <Typography key={permission.systemId} sx={{ display: 'inline' }}>
+                {permission.name}
+                {index < permisos.length - 1 ? ', ' : ''}
+              </Typography>
+            ))}
+          </Box>
+        );
       }
     },
     {
