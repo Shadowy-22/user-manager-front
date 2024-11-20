@@ -47,12 +47,11 @@ const Login: React.FC = () => {
       const response = await axios.post(loginUrl, { email, password });
 
       if (response.status === 200) {
-        // Guardamos el token, id y el usuario en localStorage
+        // Redirigimos al usuario
         sessionStorage.setItem('token', response.data.token);
         sessionStorage.setItem('userId', response.data.expiresIn);
         sessionStorage.setItem('expiresIn', response.data.userId);
-        // Redirigimos al usuario
-        navigate("/", { state: { from: location } });
+        navigate("/admin/users", { state: { from: location } });
       } else {
         setErrorMessage('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
         setOpenSnackbar(true);
