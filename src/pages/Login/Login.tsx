@@ -20,10 +20,9 @@ const Login: React.FC = () => {
   
   const theme = useTheme(); 
 
-  // TODO: Revisar el texto en darkmode del autocomplete
-
-  const [email, setEmail] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [openSnackbar, setOpenSnackbar] = useState<boolean>(false);
 
@@ -31,7 +30,7 @@ const Login: React.FC = () => {
     event.preventDefault();
 
     // Validación antes de enviar el formulario
-    const errorMessage = formValidation(email, password);
+    const errorMessage = formValidation(username, password);
 
     if (errorMessage) {
       setErrorMessage(errorMessage);
@@ -40,20 +39,42 @@ const Login: React.FC = () => {
     }
 
     // Intentamos hacer un llamado a la API 
-    // TODO: Reemplazar con la URL correspondiente
     try {
-      const loginUrl = `${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}login`; 
+      const loginUrl = `${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}login`; 
+      
+      const loginResponse = await axios.post(loginUrl, { username, password });
 
-      const response = await axios.post(loginUrl, { email, password });
+      if (loginResponse.status === 200) {
 
-      if (response.status === 200) {
-        // Redirigimos al usuario
-        sessionStorage.setItem('token', response.data.token);
-        sessionStorage.setItem('userId', response.data.expiresIn);
-        sessionStorage.setItem('expiresIn', response.data.userId);
-        navigate("/admin/users", { state: { from: location } });
+        // Verificamos que el usuario tenga autorizacion al sistema antes de redirigir.
+        const authorizationUrl = `${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}authorize`;
+
+        const authResponse = await axios.post(authorizationUrl, {
+          token: loginResponse.data.token,
+          systemId: 1
+        });
+
+        if(authResponse.data.authorized){
+          setSuccessMessage('Usuario logeado exitosamente, redirigiendo..')
+          setOpenSnackbar(true)
+          sessionStorage.setItem('token', loginResponse.data.token);
+          sessionStorage.setItem('userId', loginResponse.data.userId);
+          sessionStorage.setItem('expiresIn', loginResponse.data.expiresIn);
+
+          // Esperar 2 segundos antes de redirigir
+          setTimeout(() => {
+            navigate("/admin/users", { state: { from: location } });
+          }, 2000);
+        } else {
+          setErrorMessage('Lo sentimos, usted no está autorizado a este sistema');
+          setOpenSnackbar(true);
+          sessionStorage.removeItem('token');
+        }
+
+        
       } else {
         setErrorMessage('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
+        console.log('hola');
         setOpenSnackbar(true);
       }
     } catch (error) {
@@ -111,8 +132,8 @@ const Login: React.FC = () => {
             fullWidth
             label="Correo Electrónico"
             type="text"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             autoComplete="email"
           />
           <TextField
@@ -142,8 +163,8 @@ const Login: React.FC = () => {
           </Link>
         </Typography>
         <Snackbar open={openSnackbar} autoHideDuration={3000} onClose={handleCloseSnackbar}>
-          <Alert onClose={handleCloseSnackbar} severity="error">
-            {errorMessage}
+        <Alert onClose={handleCloseSnackbar} severity={successMessage ? "success" : "error"}>
+            {successMessage || errorMessage}
           </Alert>
         </Snackbar>
       </Paper>

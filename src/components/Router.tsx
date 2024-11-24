@@ -3,18 +3,16 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import Login from '../pages/Login/Login';
 import UserManagement from '../pages/UserManagement/UserManagement';
 import Register from '../pages/Register/Register';
-import Dashboard from '../pages/Dashboard/Dashboard';
 
 const RouterManager = () => {
   
   return (
     <Router basename='/cuentas'>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin/users" element={<UserManagement />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
        </Routes>
     </Router>
   )
