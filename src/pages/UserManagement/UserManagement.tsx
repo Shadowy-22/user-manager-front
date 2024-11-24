@@ -22,8 +22,12 @@ import { ImportMetaEnv } from '../../types/config/vite-env';
 import { User } from '../../types/User/CrudTypes.ts';
 import formValidation from '../../utils/formValidation.ts';
 import { systems } from './UserData.ts';
+import useRedirectLogin from '../../utils/useRedirectLogin.ts';
 
 const UserManagement: React.FC = () => {
+
+  useRedirectLogin();
+
   const [rows, setRows] = useState<User[]>([]);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<User>({
