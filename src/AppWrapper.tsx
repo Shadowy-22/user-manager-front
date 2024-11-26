@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createTheme, ThemeProvider, CssBaseline, Switch, FormControlLabel, PaletteOptions, Shadows } from '@mui/material';
 import App from './App'; 
 import { DarkMode, LightMode } from '@mui/icons-material';
 
 const AppWrapper = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+  const [darkMode, setDarkMode] = useState(savedDarkMode);
+
+  useEffect(() => {
+    // Guardamos el estado del tema en localStorage cada vez que cambie
+    localStorage.setItem('darkMode', String(darkMode));
+  }, [darkMode]);
 
   // Tipografia compartida
   const typography = {
