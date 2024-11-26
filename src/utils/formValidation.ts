@@ -3,16 +3,36 @@ function formValidation(
   password: string | null, // Permitimos null para omitir validación condicionalmente
   fullName?: { name: string; lastName: string },
   permisos?: number[],
-  validatePassword: boolean = true // Nuevo parámetro para controlar si se valida la contraseña
+  validatePassword: boolean = true // Parámetro para controlar si se valida la contraseña
 ): string | null {
   // Validación de campos vacíos
   if (!email || (validatePassword && !password) || (fullName && (!fullName.name || !fullName.lastName))) {
     return 'Por favor, llena todos los campos.';
   }
 
+  // Validación de nombre y apellido (solo letras y espacios permitidos)
+  if (fullName) {
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!nameRegex.test(fullName.name)) {
+      return 'El nombre solo debe contener letras y espacios.';
+    }
+    if (!nameRegex.test(fullName.lastName)) {
+      return 'El apellido solo debe contener letras y espacios.';
+    }
+  }
+
+
   // Validación de formato de email
   const emailRegex = /^[a-zA-Z0-9._%+-]+@gugle\.com$/;
-  if (!emailRegex.test(email)) {
+
+  // Verifica si hay espacios al principio o texto después del espacio final
+  if (email.startsWith(' ') || email.trim() !== email) {
+    return 'El correo electrónico no debe tener espacios al principio ni al final.';
+  }
+
+  // Validar el formato del correo eliminando los espacios finales
+  const trimmedEmail = email.trimEnd();
+  if (!emailRegex.test(trimmedEmail)) {
     return 'El correo electrónico debe terminar con @gugle.com.';
   }
 
