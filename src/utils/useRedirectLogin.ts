@@ -7,14 +7,12 @@ const useRedirectLogin = () => {
 
   useEffect(() => {
     const token = sessionStorage.getItem("token");
-    const userId = sessionStorage.getItem("userId");
-    const expiresIn = sessionStorage.getItem("expiresIn");
 
     // Rutas públicas permitidas sin autenticación
     const publicRoutes = ["/", "/register"];
 
     // Verificar si el token y los datos de autenticación son válidos
-    const isAuthenticated = token && userId && expiresIn;
+    const isAuthenticated = token;
 
     if (!isAuthenticated) {
       // Si no está autenticado, permitir solo rutas públicas

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Button,
@@ -17,16 +17,21 @@ import { DataGrid, GridColDef, GridRowId, GridActionsCellItem } from '@mui/x-dat
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
-import axios from 'axios';
-import { ImportMetaEnv } from '../../types/config/vite-env';
-import { User } from '../../types/User/CrudTypes.ts';
 import formValidation from '../../utils/formValidation.ts';
-import { systems } from './UserData.ts';
 import useRedirectLogin from '../../utils/useRedirectLogin.ts';
+import { User } from '../../types/User/CrudTypes.ts';
+import { systems } from './UserData.ts';
+import { ImportMetaEnv } from '../../types/config/vite-env';
+import axios from 'axios';
+import Logout from '../../components/Logout.tsx';
+import { performCrudAction } from '../../utils/performCrudAction.ts';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const UserManagement: React.FC = () => {
 
   useRedirectLogin();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [rows, setRows] = useState<User[]>([]);
   const [open, setOpen] = useState(false);
@@ -41,65 +46,63 @@ const UserManagement: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showPasswordField, setShowPasswordField] = useState(false);
+  
+  // Estados para la confirmacion del Dialog de borrado
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState<GridRowId | null>(null);
+  const [isTokenInvalid, setIsTokenInvalid] = useState(false);
 
-
-  // TODO For token
-  // const axiosConfig = useMemo(() => ({
-  //   headers: {
-  //     Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-  //   },
-  // }), []);  
+  const axiosConfig = useMemo(() => ({
+    headers: {
+      Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+    },
+  }), []);  
 
   const initialFormData: User = { id: 0, firstName: '', lastName: '', username: '', password: '', permisos: [] };
 
   const fetchUsers = useCallback(async () => {
-    try {
-      const { data } = await axios.get(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`);
-     
-      // Asegurarse de que los datos estén correctamente formateados
+    const action = async () => {
+      const { data } = await axios.get(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`, axiosConfig);
+  
       const formattedData = data.map((user: User) => ({
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        permisos: Array.isArray(user.permisos) ? user.permisos : [],  // Asegura que permisos siempre sea un arreglo
+        permisos: Array.isArray(user.permisos) ? user.permisos : [],
       }));
-      
-      // Establecer los datos en rows
+  
       setRows(formattedData);
-    } catch (error) {
-      console.error('Error al obtener los datos', error);
+    };
+  
+    const resultMessage = await performCrudAction(action);
+  
+    if (resultMessage) {
+      setIsTokenInvalid(true);
+      setErrorMessage(resultMessage); // Mostrar el error en el diálogo
     }
-  }, []);
+  }, [axiosConfig]);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => {
-    setOpen(false);
-    setFormData(initialFormData);
-    setIsEditing(false);
-    setErrorMessage(null);
-  };
+  const handleSave = async () => {
+    // Determinamos si es necesario validar la contraseña
+    const validatePassword = !(isEditing && !showPasswordField);
 
-    const handleSave = async () => {
-      // Determinamos si es necesario validar la contraseña
-      const validatePassword = !(isEditing && !showPasswordField);
+    const validationError = formValidation(
+      formData.username,
+      formData.password, // Se puede pasar null si es opcional
+      { name: formData.firstName, lastName: formData.lastName },
+      formData.permisos.map((permission) => permission.systemId),
+      validatePassword // Validamos solo si es necesario
+    );
 
-      const validationError = formValidation(
-        formData.username,
-        formData.password, // Se puede pasar null si es opcional
-        { name: formData.firstName, lastName: formData.lastName },
-        formData.permisos.map((permission) => permission.systemId),
-        validatePassword // Validamos solo si es necesario
-      );
-
-      if (validationError) {
-        setErrorMessage(validationError);
-        return;
-      }
+    if (validationError) {
+      setErrorMessage(validationError);
+      return;
+    }
 
     const userPayload = {
       firstName: formData.firstName, 
@@ -109,20 +112,22 @@ const UserManagement: React.FC = () => {
       sistemaIds: formData.permisos.map(permission => permission.systemId) // Usamos solo el systemId
     };
 
-    try {
+    const action = async () => {
       if (isEditing) {
-        await axios.put(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${formData.id}`, userPayload);
+          await axios.put(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${formData.id}`, userPayload, axiosConfig);
       } else {
-        await axios.post(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`, userPayload);
+          await axios.post(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`, userPayload, axiosConfig);
       }
-      handleClose();
-      fetchUsers();
-    } catch (error) {
-      if (error.response?.status === 409) {
-        setErrorMessage('El correo electrónico ya está registrado.');
-      } else {
-        setErrorMessage('Ocurrió un error al guardar los datos.');
-      }
+    };
+
+    const resultMessage = await performCrudAction(action);
+    if (resultMessage) {
+        setIsTokenInvalid(true);
+        handleClose();
+        setErrorMessage(resultMessage); // Mostrar mensaje en el diálogo
+    } else {
+        handleClose();
+        fetchUsers(); // Actualizar la lista de usuarios
     }
   };
 
@@ -135,15 +140,53 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteClick = async (id: GridRowId) => {
-    try {
-      await axios.delete(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${id}`);
-      setRows(rows.filter((row) => row.id !== id));
-    } catch (error) {
-      console.error('Error al eliminar el usuario:', error);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => {
+    setOpen(false);
+    setFormData(initialFormData);
+    setIsEditing(false);
+    setErrorMessage(null);
+  };
+
+  // Redirigimos al usuario
+  const handleCloseInvalid = () => {
+    navigate('/', { state: { from: location } });
+  }
+
+  const handleDeleteClick = (id: GridRowId) => {
+    setDeleteUserId(id); // Setteamos el usuario a borrar
+    setDeleteDialogOpen(true); 
+  };
+
+  const confirmDelete = async () => {
+    if (deleteUserId !== null) {
+      const action = async () => {
+        await axios.delete(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${deleteUserId}`, axiosConfig);
+      }
+
+      const resultMessage = await performCrudAction(action);
+        
+      if (resultMessage) {
+          handleClose();
+          setIsTokenInvalid(true);
+          setErrorMessage(resultMessage); // Mostrar mensaje en el diálogo
+      } else {
+          setRows(rows.filter((row) => row.id !== deleteUserId));
+          setDeleteDialogOpen(false); 
+          setDeleteUserId(null); 
+          handleClose();
+          fetchUsers(); // Actualizar la lista de usuarios
+      }
     }
   };
 
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setDeleteUserId(null);
+  };
+
+
+  /* Material Grid Component */
   const processRowUpdate = (newRow: User) => {
     setRows((prevRows) => prevRows.map((row) => (row.id === newRow.id ? { ...newRow } : row)));
     return newRow;
@@ -189,11 +232,15 @@ const UserManagement: React.FC = () => {
     },
   ];
 
-  const systemKeys = Object.keys(systems);
+
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>Gestión de Usuarios</Typography>
+    <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4}}>
+        <Typography variant="h5">Bienvenido/a, Usuario</Typography>
+        <Logout />
+      </Box>
+      <Typography variant="h4" sx={{mb: 4}}>Gestión de Usuarios</Typography>
       <Button variant="contained" startIcon={<AddIcon />} color="primary" onClick={handleOpen}>
         Agregar Usuario
       </Button>
@@ -279,7 +326,7 @@ const UserManagement: React.FC = () => {
             )}
 
             <FormGroup row sx={{ gap: 2, marginTop: 3 }}>
-              {systemKeys.map((key) => (
+              {Object.keys(systems).map((key) => (
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -308,6 +355,29 @@ const UserManagement: React.FC = () => {
             </DialogActions>
           </form>
         </DialogContent>
+      </Dialog>
+
+      {/* Dialogo de confirmacion de borrado */}
+      <Dialog open={deleteDialogOpen} onClose={cancelDelete}>
+        <DialogTitle>Confirmación</DialogTitle>
+        <DialogContent>
+          <Typography>¿Estás seguro de que deseas eliminar el usuario?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelDelete} color="primary">Cancelar</Button>
+          <Button onClick={confirmDelete} color="error">Eliminar</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialogo de error por token invalido */}
+      <Dialog open={isTokenInvalid} onClose={() => setErrorMessage(null)}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <Typography>{errorMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseInvalid}>Cerrar</Button>
+        </DialogActions>
       </Dialog>
     </Container>
   );

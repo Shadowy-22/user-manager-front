@@ -6,7 +6,7 @@ import { ImportMetaEnv } from '../../types/config/vite-env';
 import useRedirectLogin from '../../utils/useRedirectLogin';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import formValidation from '../../utils/formValidation';
-
+ 
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -58,8 +58,6 @@ const Login: React.FC = () => {
           setSuccessMessage('Usuario logeado exitosamente, redirigiendo..')
           setOpenSnackbar(true)
           sessionStorage.setItem('token', loginResponse.data.token);
-          sessionStorage.setItem('userId', loginResponse.data.userId);
-          sessionStorage.setItem('expiresIn', loginResponse.data.expiresIn);
 
           // Esperar 2 segundos antes de redirigir
           setTimeout(() => {

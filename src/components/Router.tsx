@@ -7,7 +7,7 @@ import Register from '../pages/Register/Register';
 const RouterManager = () => {
   
   return (
-    <Router basename='/cuentas'>
+    <Router basename='/cuentas/'>
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
