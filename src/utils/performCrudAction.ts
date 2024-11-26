@@ -9,8 +9,6 @@ const isTokenValid = async (): Promise<boolean> => {
         },
     }
 
-    console.log(axiosConfig)
-
     try {
         await axios.get(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}isTokenValid`, axiosConfig);
         return true;

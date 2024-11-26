@@ -51,7 +51,7 @@ const Login: React.FC = () => {
 
         const authResponse = await axios.post(authorizationUrl, {
           token: loginResponse.data.token,
-          systemId: 1
+          systemId: "1"
         });
 
         if(authResponse.data.authorized){
@@ -72,7 +72,6 @@ const Login: React.FC = () => {
         
       } else {
         setErrorMessage('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
-        console.log('hola');
         setOpenSnackbar(true);
       }
     } catch (error) {

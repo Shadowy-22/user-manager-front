@@ -26,6 +26,7 @@ import axios from 'axios';
 import Logout from '../../components/Logout.tsx';
 import { performCrudAction } from '../../utils/performCrudAction.ts';
 import { useLocation, useNavigate } from 'react-router-dom';
+import useFetchUser from '../../API/useFetchUser.ts';
 
 const UserManagement: React.FC = () => {
 
@@ -51,6 +52,20 @@ const UserManagement: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteUserId, setDeleteUserId] = useState<GridRowId | null>(null);
   const [isTokenInvalid, setIsTokenInvalid] = useState(false);
+  const { user, isLoading, error } = useFetchUser();
+
+  const renderUserGreeting = () => {
+    if (isLoading) {
+      return 'Cargando datos del usuario...';
+    }
+    if (error) {
+      return `Error: ${error}`;
+    }
+    if (user) {
+      return `Bienvenido/a, ${user.firstName} ${user.lastName}`;
+    }
+    return 'No se encontraron datos del usuario.';
+  };
 
   const axiosConfig = useMemo(() => ({
     headers: {
@@ -132,6 +147,7 @@ const UserManagement: React.FC = () => {
   };
 
   const handleEditClick = (id: GridRowId) => {
+
     const user = rows.find((row) => row.id === id);
     if (user) {
       setFormData(user);
@@ -192,6 +208,8 @@ const UserManagement: React.FC = () => {
     return newRow;
   };
 
+  const filteredRows = rows.filter(row => row.id !== user?.userId);
+
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', flex: 0.5 },
     { field: 'firstName', headerName: 'Nombre', flex: 1 },
@@ -225,10 +243,30 @@ const UserManagement: React.FC = () => {
       type: 'actions',
       headerName: 'Acciones',
       width: 150,
-      getActions: ({ id }) => [
-        <GridActionsCellItem icon={<EditIcon />} key={`edit-${id}`} label="Editar" onClick={() => handleEditClick(id)} color="inherit" />,
-        <GridActionsCellItem icon={<DeleteIcon />} key={`delete-${id}`} label="Borrar" onClick={() => handleDeleteClick(id)} color="inherit" />,
-      ],
+      getActions: ({ id }) => {
+        // Si es el usuario actual, no mostrar acciones
+        if (id === user?.userId) {
+          return []; // Retornar un array vacío explícitamente
+        }
+  
+        // De lo contrario, retornar acciones de editar y borrar
+        return [
+          <GridActionsCellItem 
+            icon={<EditIcon />} 
+            key={`edit-${id}`} 
+            label="Editar" 
+            onClick={() => handleEditClick(id)} 
+            color="inherit" 
+          />,
+          <GridActionsCellItem 
+            icon={<DeleteIcon />} 
+            key={`delete-${id}`} 
+            label="Borrar" 
+            onClick={() => handleDeleteClick(id)} 
+            color="inherit" 
+          />,
+        ];
+      },
     },
   ];
 
@@ -237,7 +275,7 @@ const UserManagement: React.FC = () => {
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4}}>
-        <Typography variant="h5">Bienvenido/a, Usuario</Typography>
+        <Typography variant="h5">{renderUserGreeting()}</Typography>
         <Logout />
       </Box>
       <Typography variant="h4" sx={{mb: 4}}>Gestión de Usuarios</Typography>
@@ -247,7 +285,7 @@ const UserManagement: React.FC = () => {
 
       <Box sx={{ height: 500, width: '100%', mt: 2 }}>
         <DataGrid
-          rows={rows && rows.length > 0 ? rows : []} 
+          rows={filteredRows && filteredRows.length > 0 ? filteredRows : []} 
           columns={columns}
           editMode="row"
           processRowUpdate={processRowUpdate}
