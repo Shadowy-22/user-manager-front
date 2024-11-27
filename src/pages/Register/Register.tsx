@@ -49,7 +49,7 @@ const Register: React.FC = () => {
     // Intentamos hacer un llamado a la API 
     // TODO: Reemplazar con la URL correspondiente
     try {
-      const registerUrl = `${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}register`; 
+      const registerUrl = `${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}register`; 
 
       const response = await axios.post(registerUrl, { 
         username: email, 

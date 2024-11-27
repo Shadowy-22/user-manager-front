@@ -34,7 +34,7 @@ const useFetchUser = (): { user: User | null; isLoading: boolean; error: string 
 
         // Realizar la solicitud GET
         const response = await axios.get(
-          `${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${userId}?token=${token}`
+          `${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}users/${userId}?token=${token}`
         );
 
         // Combinar el userId con los datos obtenidos del usuario

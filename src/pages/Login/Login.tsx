@@ -40,14 +40,14 @@ const Login: React.FC = () => {
 
     // Intentamos hacer un llamado a la API 
     try {
-      const loginUrl = `${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}login`; 
+      const loginUrl = `${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}login`; 
       
       const loginResponse = await axios.post(loginUrl, { username, password });
 
       if (loginResponse.status === 200) {
 
         // Verificamos que el usuario tenga autorizacion al sistema antes de redirigir.
-        const authorizationUrl = `${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}authorize`;
+        const authorizationUrl = `${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}authorize`;
 
         const authResponse = await axios.post(authorizationUrl, {
           token: loginResponse.data.token,

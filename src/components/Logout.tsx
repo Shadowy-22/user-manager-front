@@ -25,7 +25,7 @@ const Logout = () => {
       };
 
       await axios.post(
-        `${import.meta.env.VITE_CUENTAS_CRUD_URL}logout`,
+        `${import.meta.env.VITE_CUENTAS_API_URL}logout`,
         null,
         config
       );

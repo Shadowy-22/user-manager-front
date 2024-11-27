@@ -10,7 +10,7 @@ const isTokenValid = async (): Promise<boolean> => {
     }
 
     try {
-        await axios.get(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}isTokenValid`, axiosConfig);
+        await axios.get(`${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}isTokenValid`, axiosConfig);
         return true;
     } catch (error) {
         if (error.response?.status === 401) {

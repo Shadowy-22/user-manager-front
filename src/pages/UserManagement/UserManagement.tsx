@@ -77,7 +77,7 @@ const UserManagement: React.FC = () => {
 
   const fetchUsers = useCallback(async () => {
     const action = async () => {
-      const { data } = await axios.get(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`, axiosConfig);
+      const { data } = await axios.get(`${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}users`, axiosConfig);
   
       const formattedData = data.map((user: User) => ({
         id: user.id,
@@ -129,9 +129,9 @@ const UserManagement: React.FC = () => {
 
     const action = async () => {
       if (isEditing) {
-          await axios.put(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${formData.id}`, userPayload, axiosConfig);
+          await axios.put(`${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}users/${formData.id}`, userPayload, axiosConfig);
       } else {
-          await axios.post(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users`, userPayload, axiosConfig);
+          await axios.post(`${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}users`, userPayload, axiosConfig);
       }
     };
 
@@ -177,7 +177,7 @@ const UserManagement: React.FC = () => {
   const confirmDelete = async () => {
     if (deleteUserId !== null) {
       const action = async () => {
-        await axios.delete(`${import.meta.env.VITE_CUENTAS_CRUD_URL as ImportMetaEnv}users/${deleteUserId}`, axiosConfig);
+        await axios.delete(`${import.meta.env.VITE_CUENTAS_API_URL as ImportMetaEnv}users/${deleteUserId}`, axiosConfig);
       }
 
       const resultMessage = await performCrudAction(action);
